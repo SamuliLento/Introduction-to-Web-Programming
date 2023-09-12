@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Week2</title>
+    <meta charset="UTF-8" />
+    <script src="js/index.js" defer></script>
+</head>
+
+<body>
+    <table>
+        <thead>
+            <tr><th>Username</th><th>Email</th><th>Admin</th><th>Image</th></tr>
+        </thead>
+        <tbody id="table-body">
+            <tr><td>Webmaster</td><td>example@email.com</td><td>X</td></tr>
+            <tr><td>User123</td><td>example@email.com</td><td>-</td></tr>
+            <tr><td>AnotherUser222</td><td>example@email.com</td><td>-</td></tr>
+        </tbody>
+    </table>
+    <br>
+    <button id="empty-table">Empty table</button>
+    <br>
+    <br>
+    <form>
+        <legend>Add custom data to the table</legend>
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="input-username" placeholder="Username">
+        <br>
+        <label for="email">Email:</label>
+        <input type="text" name="email" id="input-email" placeholder="Email">
+        <br>
+        <label for="admin">Admin:</label>
+        <input type="checkbox" name="admin" id="input-admin">
+        <br>
+        <label for="image">Image:</label>
+        <input type="file" name="image" id="input-image">
+        <br>
+        <input type="submit" id="submit-data">
+    </form>
+</body>
+
+</html>
