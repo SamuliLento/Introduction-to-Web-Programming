@@ -67,7 +67,7 @@ const getData = async () => {
     const data = await res.json();
 
     return data;
-}
+};
 
 const buildChart = async () => {
     const data = await getData();
