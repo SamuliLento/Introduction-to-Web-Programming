@@ -68,11 +68,11 @@ const getStyle = (feature) => {
 
     if (((positiveMigration[pId] / negativeMigration[nId])**3 * 60) > 120) {
         return {
-            color: `hsl(120 75% 50%)`
+            color: "hsl(120, 75%, 50%)"
         }
     } else {
         return {
-            color: `hsl(${(positiveMigration[pId] / negativeMigration[nId])**3 * 60} 75% 50%)`
+            color: "hsl(" + (((positiveMigration[pId] / negativeMigration[nId])**3) * 60) + ", 75%, 50%)"
         }
     }
 };
