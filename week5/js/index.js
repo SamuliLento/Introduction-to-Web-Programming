@@ -66,12 +66,14 @@ const getStyle = (feature) => {
     const pId = positiveIndex[areaCode];
     const nId = negativeIndex[areaCode];
 
-    let hue = (positiveMigration[pId] / negativeMigration[nId])**3 * 60;
-    if (hue > 120) {
-        hue = 120;
-    }
-    return {
-        color: `hsl(${hue} 75% 50%)`
+    if (((positiveMigration[pId] / negativeMigration[nId])**3 * 60) > 120) {
+        return {
+            color: `hsl(120 75% 50%)`
+        }
+    } else {
+        return {
+            color: `hsl(${(positiveMigration[pId] / negativeMigration[nId])**3 * 60} 75% 50%)`
+        }
     }
 };
 
