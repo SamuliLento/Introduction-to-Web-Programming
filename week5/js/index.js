@@ -1,12 +1,14 @@
 let positiveMigration = [];
+let positiveIndex;
 let negativeMigration = [];
+let negativeIndex;
 
 async function getData() {
     const url = "https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta4500k&outputFormat=json&srsName=EPSG:4326";
     const dataPromise = await fetch(url);
     const dataJSON = await dataPromise.json();
 
-    initMap(dataJSON, positiveMigration, negativeMigration);
+    initMap(dataJSON);
 }
 
 async function getMigrationData(url, migration) {
@@ -15,8 +17,10 @@ async function getMigrationData(url, migration) {
 
     if (migration == "+") {
         positiveMigration = Object.values(dataJSON.dataset.value);
+        positiveIndex = dataJSON.dataset.dimension.Tuloalue.category.index;
     } else if (migration == "-") {
         negativeMigration = Object.values(dataJSON.dataset.value);
+        negativeIndex = dataJSON.dataset.dimension.Lähtöalue.category.index;
     }
 }
 
@@ -42,23 +46,27 @@ const initMap = (data) => {
 const getFeature = (feature, layer) => {
     if (!feature) return;
 
-    const id = feature.id.split("."); //stackoverflow convert string to array
+    const areaCode = "KU" + feature.properties.kunta;
+    const pId = positiveIndex[areaCode];
+    const nId = negativeIndex[areaCode];
 
     layer.bindTooltip(feature.properties.name);
     layer.bindPopup(
         `<ul>
             <li>Name: ${feature.properties.name}</li>
-            <li>Positive migration: ${positiveMigration[id[1]]}</li>
-            <li>Negative migration: ${negativeMigration[id[1]]}</li>
+            <li>Positive migration: ${positiveMigration[pId]}</li>
+            <li>Negative migration: ${negativeMigration[nId]}</li>
         </ul>`
     )
 };
 
 const getStyle = (feature) => {
 
-    const id = feature.id.split("."); //stackoverflow convert string to array
+    const areaCode = "KU" + feature.properties.kunta;
+    const pId = positiveIndex[areaCode];
+    const nId = negativeIndex[areaCode];
 
-    let hue = (positiveMigration[id[1]] / negativeMigration[id[1]])**3 * 60;
+    let hue = (positiveMigration[pId] / negativeMigration[nId])**3 * 60;
     if (hue > 120) {
         hue = 120;
     }
