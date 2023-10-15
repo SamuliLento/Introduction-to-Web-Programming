@@ -51,7 +51,7 @@ class PlayGame extends Phaser.Scene {
         });
 
         for(let i = 0; i < 20; i++) {
-            this.groundGroup.create(Phaser.Math.Between(0, game.config.width), Phaser.Math.Between(0, game.config.height), "ground");
+            this.groundGroup.create(Phaser.Math.Between(0, game.config.width), Phaser.Math.Between(0, game.config.height), "ground").setScale(0.5);
         }
 
         this.dude = this.physics.add.sprite(game.config.width / 2, game.config.height / 2, "dude");
@@ -98,7 +98,7 @@ class PlayGame extends Phaser.Scene {
 
     addGround() {
         console.log("Adding new stuff!");
-        this.groundGroup.create(Phaser.Math.Between(0, game.config.width), 0, "ground");
+        this.groundGroup.create(Phaser.Math.Between(0, game.config.width), 0, "ground").setScale(0.5);
         this.groundGroup.setVelocityY(gameOptions.dudeSpeed / 6);
 
         if(Phaser.Math.Between(0, 1)) {
