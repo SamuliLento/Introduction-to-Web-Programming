@@ -7,7 +7,6 @@ const gameOptions = {
 window.onload = function() {
     let gameConfig = {
         type: Phaser.AUTO,
-        backgroundColor: "#111133",
         scale: {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -23,10 +22,87 @@ window.onload = function() {
                 }
             }
         },
-        scene: PlayGame
+        scene: [MainMenu, PlayGame, GameOver]
     }
     game = new Phaser.Game(gameConfig);
     window.focus();
+}
+
+class MainMenu extends Phaser.Scene {
+
+    constructor() {
+        super("MainMenu");
+    }
+
+    preload() {
+        this.load.image("backgroundBrown", "assets/Background/Brown.png");
+        this.load.image("backgroundBlue", "assets/Background/Blue.png");
+        this.load.image("backgroundGray", "assets/Background/Gray.png");
+        this.load.spritesheet("terrain", "assets/Terrain (16x16).png", {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet("Mask Dude Idle", "assets/Mask Dude/Idle (32x32).png", {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet("Mask Dude Run", "assets/Mask Dude/Run (32x32).png", {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet("Mask Dude Jump", "assets/Mask Dude/Jump (32x32).png", {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet("Mask Dude Fall", "assets/Mask Dude/Fall (32x32).png", {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet("Melon", "assets/Fruits/Melon.png", {frameWidth: 32, frameHeight: 32});
+
+        this.load.audio("jump", "assets/sfx/Retro Jump Classic 08.wav");
+        this.load.audio("collect fruit", "assets/sfx/Retro PickUp Coin 07.wav");
+    }
+
+    create() {
+        let x = 32;
+        let y = 32;
+
+        for (let i = 0; i < (game.config.height / 64); i++) {
+            for(let j = 0; j < (game.config.width / 64); j++) {
+                this.add.image(x, y, "backgroundBrown");
+                x += 64;
+            }
+            x = 32;
+            y += 64;
+        }
+
+        this.add.text(game.config.width / 2, game.config.height / 2, "Infinite Jumper", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 64, "Select Level", {fontSize: "30px", fill: "#ffffff"}).setOrigin(1);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 128, "Level ONE", {fontSize: "30px", fill: "#ffffff"}).setOrigin(1);
+
+        this.input.keyboard.once("keydown-ONE", () => {
+            this.scene.start("PlayGame");
+        })
+
+        this.anims.create({
+            key: "idle",
+            frames: this.anims.generateFrameNumbers("Mask Dude Idle", {start: 0, end: 10}),
+            frameRate: 20,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: "run",
+            frames: this.anims.generateFrameNumbers("Mask Dude Run", {start: 0, end: 10}),
+            frameRate: 20,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: "jump",
+            frames: [{key: "Mask Dude Jump", frame: 0}],
+            frameRate: 20,
+        });
+
+        this.anims.create({
+            key: "fall",
+            frames: [{key: "Mask Dude Fall", frame: 0}],
+            frameRate: 20,
+        });
+
+        this.anims.create({
+            key: "melon",
+            frames: this.anims.generateFrameNumbers("Melon", {start: 0, end: 16}),
+            frameRate: 20,
+            repeat: -1
+        });
+    }
 }
 
 class PlayGame extends Phaser.Scene {
@@ -40,15 +116,6 @@ class PlayGame extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("background", "assets/Background/Blue.png");
-        this.load.spritesheet("terrain", "assets/Terrain (16x16).png", {frameWidth: 16, frameHeight: 16});
-        this.load.spritesheet("Mask Dude Idle", "assets/Mask Dude/Idle (32x32).png", {frameWidth: 32, frameHeight: 32});
-        this.load.spritesheet("Mask Dude Run", "assets/Mask Dude/Run (32x32).png", {frameWidth: 32, frameHeight: 32});
-        this.load.spritesheet("Mask Dude Jump", "assets/Mask Dude/Jump (32x32).png", {frameWidth: 32, frameHeight: 32});
-        this.load.spritesheet("Mask Dude Fall", "assets/Mask Dude/Fall (32x32).png", {frameWidth: 32, frameHeight: 32});
-        this.load.spritesheet("Melon", "assets/Fruits/Melon.png", {frameWidth: 32, frameHeight: 32});
-        this.load.spritesheet("Collected", "assets/Fruits/Collected.png", {frameWidth: 32, frameHeight: 32});
-
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
@@ -58,7 +125,7 @@ class PlayGame extends Phaser.Scene {
 
         for (let i = 0; i < (game.config.height / 64); i++) {
             for(let j = 0; j < (game.config.width / 64); j++) {
-                this.add.image(x, y, "background");
+                this.add.image(x, y, "backgroundBlue");
                 x += 64;
             }
             x = 32;
@@ -96,45 +163,6 @@ class PlayGame extends Phaser.Scene {
 
         this.scoreText = this.add.text(16, 3, "Score: 0", {fontSize: "30px", fill: "#ffffff"});
 
-        this.anims.create({
-            key: "idle",
-            frames: this.anims.generateFrameNumbers("Mask Dude Idle", {start: 0, end: 10}),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: "run",
-            frames: this.anims.generateFrameNumbers("Mask Dude Run", {start: 0, end: 10}),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: "jump",
-            frames: [{key: "Mask Dude Jump", frame: 0}],
-            frameRate: 10,
-        });
-
-        this.anims.create({
-            key: "fall",
-            frames: [{key: "Mask Dude Fall", frame: 0}],
-            frameRate: 10,
-        });
-
-        this.anims.create({
-            key: "melon",
-            frames: this.anims.generateFrameNumbers("Melon", {start: 0, end: 16}),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: "collect",
-            frames: this.anims.generateFrameNumbers("Collected", {start: 0, end: 5}),
-            frameRate: 10,
-        });
-
         this.triggerTimer = this.time.addEvent({
             callback: this.addTerrain,
             callbackScope: this,
@@ -162,10 +190,10 @@ class PlayGame extends Phaser.Scene {
     }
 
     collectFruit(player, fruit) {
-        fruit.anims.play("collect", true);
         fruit.disableBody(true, true);
         this.score += 1;
         this.scoreText.setText("Score: " + this.score);
+        this.sound.play("collect fruit");
     }
 
     update() {
@@ -184,6 +212,7 @@ class PlayGame extends Phaser.Scene {
 
         if(this.cursors.up.isDown && this.player.body.touching.down) {
             this.player.body.velocity.y = -500 / 1.6;
+            this.sound.play("jump");
         }
 
         if(this.player.body.velocity.y < 0) {
@@ -193,7 +222,35 @@ class PlayGame extends Phaser.Scene {
         }
 
         if(this.player.y > game.config.height) {
-            this.scene.start("PlayGame");
+            this.scene.start("GameOver");
         }
+    }
+}
+
+class GameOver extends Phaser.Scene {
+
+    constructor() {
+        super("GameOver");
+    }
+
+    create() {
+        let x = 32;
+        let y = 32;
+
+        for (let i = 0; i < (game.config.height / 64); i++) {
+            for(let j = 0; j < (game.config.width / 64); j++) {
+                this.add.image(x, y, "backgroundGray");
+                x += 64;
+            }
+            x = 32;
+            y += 64;
+        }
+        
+        this.add.text(game.config.width / 2, game.config.height / 2, "Game Over!", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 48, "Press SPACE to play again", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+
+        this.input.keyboard.once("keydown-SPACE", () => {
+            this.scene.start("PlayGame");
+        });
     }
 }
