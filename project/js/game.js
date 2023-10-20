@@ -1,7 +1,8 @@
 let game;
 
 const gameOptions = {
-    playerSpeed: 200
+    playerSpeed: 200,
+    jumpPower: 300
 }
 
 window.onload = function() {
@@ -43,13 +44,21 @@ class MainMenu extends Phaser.Scene {
         this.load.spritesheet("Mask Dude Run", "assets/Mask Dude/Run (32x32).png", {frameWidth: 32, frameHeight: 32});
         this.load.spritesheet("Mask Dude Jump", "assets/Mask Dude/Jump (32x32).png", {frameWidth: 32, frameHeight: 32});
         this.load.spritesheet("Mask Dude Fall", "assets/Mask Dude/Fall (32x32).png", {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet("Mask Dude Hit", "assets/Mask Dude/Hit (32x32).png", {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet("Bananas", "assets/Fruits/Bananas.png", {frameWidth: 32, frameHeight: 32});
         this.load.spritesheet("Melon", "assets/Fruits/Melon.png", {frameWidth: 32, frameHeight: 32});
+        this.load.image("Trampoline", "assets/Traps/Trampoline/Idle.png");
+        this.load.spritesheet("Trampoline Jump", "assets/Traps/Trampoline/Jump (28x28).png", {frameWidth: 28, frameHeight: 28});
+        this.load.image("Saw", "assets/Traps/Saw/Off.png");
+        this.load.spritesheet("Saw On", "assets/Traps/Saw/On (38x38).png", {frameWidth: 38, frameHeight: 38});
 
         this.load.audio("jump", "assets/sfx/Retro Jump Classic 08.wav");
         this.load.audio("collect fruit", "assets/sfx/Retro PickUp Coin 07.wav");
     }
 
     create() {
+
+        //Create Menu background
         let x = 32;
         let y = 32;
 
@@ -62,14 +71,17 @@ class MainMenu extends Phaser.Scene {
             y += 64;
         }
 
+        //Create Menu texts
         this.add.text(game.config.width / 2, game.config.height / 2, "Infinite Jumper", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
         this.add.text(game.config.width / 2, game.config.height / 2 + 64, "Select Level", {fontSize: "30px", fill: "#ffffff"}).setOrigin(1);
         this.add.text(game.config.width / 2, game.config.height / 2 + 128, "Level ONE", {fontSize: "30px", fill: "#ffffff"}).setOrigin(1);
 
+        //Create Menu inputs
         this.input.keyboard.once("keydown-ONE", () => {
             this.scene.start("PlayGame");
         })
 
+        //Create animations for game objects
         this.anims.create({
             key: "idle",
             frames: this.anims.generateFrameNumbers("Mask Dude Idle", {start: 0, end: 10}),
@@ -97,8 +109,34 @@ class MainMenu extends Phaser.Scene {
         });
 
         this.anims.create({
+            key: "hit",
+            frames: this.anims.generateFrameNumbers("Mask Dude Hit", {start: 0, end: 6}),
+            frameRate: 20,
+        });
+
+        this.anims.create({
+            key: "bananas",
+            frames: this.anims.generateFrameNumbers("Bananas", {start: 0, end: 16}),
+            frameRate: 20,
+            repeat: -1
+        });
+
+        this.anims.create({
             key: "melon",
             frames: this.anims.generateFrameNumbers("Melon", {start: 0, end: 16}),
+            frameRate: 20,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: "trampolineJump",
+            frames: this.anims.generateFrameNumbers("Trampoline Jump", {start: 0, end: 7}),
+            frameRate: 20,
+        });
+
+        this.anims.create({
+            key: "sawOn",
+            frames: this.anims.generateFrameNumbers("Saw On", {start: 0, end: 7}),
             frameRate: 20,
             repeat: -1
         });
@@ -120,6 +158,8 @@ class PlayGame extends Phaser.Scene {
     }
 
     create() {
+
+        //Create background for level
         let x = 32;
         let y = 32;
 
@@ -156,10 +196,19 @@ class PlayGame extends Phaser.Scene {
         this.player.body.checkCollision.left = false;
         this.player.body.checkCollision.right = false;
 
-        this.fruitGroup = this.physics.add.group({});
+        this.fruitGroup = this.physics.add.group();
         this.physics.add.collider(this.fruitGroup, this.terrainGroup);
-
         this.physics.add.overlap(this.player, this.fruitGroup, this.collectFruit, null, this);
+
+        this.trampolineGroup = this.physics.add.group();
+        this.physics.add.collider(this.trampolineGroup, this.terrainGroup);
+        this.physics.add.overlap(this.player, this.trampolineGroup, this.jumpTrampoline, null, this);
+
+        this.sawGroup = this.physics.add.group({
+            immovable: true,
+            allowGravity: false
+        });
+        this.physics.add.overlap(this.player, this.sawGroup, this.playerHit, null, this);
 
         this.scoreText = this.add.text(16, 3, "Score: 0", {fontSize: "30px", fill: "#ffffff"});
 
@@ -171,10 +220,12 @@ class PlayGame extends Phaser.Scene {
         });
     }
 
+    //Spawn new game objects as the game goes on
     addTerrain() {
 
         const x = Phaser.Math.Between(0, game.config.width);
 
+        //Spawn platforms
         this.terrainGroup.create(x, 0, "terrain", 193);
         this.terrainGroup.create(x + 16, 0, "terrain", 194);
         this.terrainGroup.create(x + 32, 0, "terrain", 194);
@@ -184,46 +235,99 @@ class PlayGame extends Phaser.Scene {
 
         this.terrainGroup.setVelocityY(gameOptions.playerSpeed / 6);
 
-        if(Phaser.Math.Between(0, 1)) {
+        //Spawn trampolines on platforms
+        if (Phaser.Math.Between(0, 5) == 1) {
+            this.trampolineGroup.create(x + 40, -20, "Trampoline");
+        }
+
+        //Spawn saws left or right
+        if (Phaser.Math.Between(0, 4) == 1) {
+            if(Phaser.Math.Between(0, 1)) {
+                this.sawGroup.create(0, -20, "Saw").anims.play("sawOn", true);
+            } else {
+                this.sawGroup.create(game.config.width, -20, "Saw").anims.play("sawOn", true);
+            }
+        }
+        this.sawGroup.setVelocityY(gameOptions.playerSpeed / 6);
+
+        //Spawn fruits
+        if(Phaser.Math.Between(0, 1) == 1) {
             this.fruitGroup.create(Phaser.Math.Between(0, game.config.width), 0, "Melon").anims.play("melon", true);
+        }
+        if(Phaser.Math.Between(0, 3) == 1) {
+            this.fruitGroup.create(Phaser.Math.Between(0, game.config.width), 0, "Bananas").anims.play("bananas", true);
         }
     }
 
+    //Get points after player collects fruits
     collectFruit(player, fruit) {
         fruit.disableBody(true, true);
-        this.score += 1;
+        if(fruit.texture.key == "Melon") {
+            this.score += 1;
+        } else if (fruit.texture.key == "Bananas") {
+            this.score += 2;
+        }
         this.scoreText.setText("Score: " + this.score);
         this.sound.play("collect fruit");
     }
 
+    //Jump high when player hits trampoline
+    jumpTrampoline(player, trampoline) {
+        if(this.player.body.touching.down) {
+            this.player.body.velocity.y = -gameOptions.jumpPower * 1.5;
+            trampoline.anims.play("trampolineJump", true);
+        }
+    }
+
+    //Lose player control and fall off when player gets hit
+    playerHit(player, saw) {
+        player.body.checkCollision.down = false;
+        player.anims.play("hit", true);
+    }
+
     update() {
-        if(this.cursors.left.isDown) {
-            this.player.body.velocity.x = -gameOptions.playerSpeed;
-            this.player.setFlipX(true);
-            this.player.anims.play("run", true);
-        } else if(this.cursors.right.isDown) {
-            this.player.body.velocity.x = gameOptions.playerSpeed;
-            this.player.setFlipX(false);
-            this.player.anims.play("run", true);
-        } else {
-            this.player.body.velocity.x = 0;
-            this.player.anims.play("idle", true);
+        if(this.player.body.checkCollision.down) {
+            //Move with player
+            if(this.cursors.left.isDown) {
+                this.player.body.velocity.x = -gameOptions.playerSpeed;
+                this.player.setFlipX(true);
+                this.player.anims.play("run", true);
+            } else if(this.cursors.right.isDown) {
+                this.player.body.velocity.x = gameOptions.playerSpeed;
+                this.player.setFlipX(false);
+                this.player.anims.play("run", true);
+            } else {
+                this.player.body.velocity.x = 0;
+                this.player.anims.play("idle", true);
+            }
+    
+            //Jump with player
+            if((this.cursors.up.isDown && this.player.body.touching.down)) {
+                this.player.body.velocity.y = -gameOptions.jumpPower;
+                this.sound.play("jump");
+            }
+            
+            //Play animation when player is jumping or falling
+            if(this.player.body.velocity.y < 0) {
+                this.player.anims.play("jump", true);
+            } else if(this.player.body.velocity.y > 0 && !this.player.body.touching.down) {
+                this.player.anims.play("fall", true);
+            }
         }
 
-        if(this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.body.velocity.y = -500 / 1.6;
-            this.sound.play("jump");
-        }
-
-        if(this.player.body.velocity.y < 0) {
-            this.player.anims.play("jump", true);
-        } else if(this.player.body.velocity.y > 0 && !this.player.body.touching.down) {
-            this.player.anims.play("fall", true);
-        }
-
+        //Game ends when player falls off
         if(this.player.y > game.config.height) {
             this.scene.start("GameOver");
         }
+
+        //Change saw move direction when it reaches edge of screen
+        this.sawGroup.getChildren().forEach((saw) => {
+            if(saw.x <= 0) {
+                saw.setVelocityX(gameOptions.playerSpeed / 2);
+            } else if(saw.x >= game.config.width) {
+                saw.setVelocityX(-gameOptions.playerSpeed / 2);
+            }
+        });
     }
 }
 
@@ -234,6 +338,8 @@ class GameOver extends Phaser.Scene {
     }
 
     create() {
+
+        //Create Game Over background
         let x = 32;
         let y = 32;
 
@@ -246,9 +352,11 @@ class GameOver extends Phaser.Scene {
             y += 64;
         }
         
+        //Create Game Over texts
         this.add.text(game.config.width / 2, game.config.height / 2, "Game Over!", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
         this.add.text(game.config.width / 2, game.config.height / 2 + 48, "Press SPACE to play again", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
 
+        //Create Game Over inputs
         this.input.keyboard.once("keydown-SPACE", () => {
             this.scene.start("PlayGame");
         });

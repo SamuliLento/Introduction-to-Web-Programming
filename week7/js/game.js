@@ -97,7 +97,6 @@ class PlayGame extends Phaser.Scene {
     }
 
     addGround() {
-        console.log("Adding new stuff!");
         this.groundGroup.create(Phaser.Math.Between(0, game.config.width), 0, "ground").setScale(0.5);
         this.groundGroup.setVelocityY(gameOptions.dudeSpeed / 6);
 
