@@ -41,6 +41,7 @@ class PlayGame extends Phaser.Scene {
     preload() {
         this.load.image("ground", "assets/platform.png");
         this.load.image("star", "assets/star.png");
+        this.load.image("bomb", "assets/bomb.png");
         this.load.spritesheet("dude", "assets/dude.png", {frameWidth: 32, frameHeight: 48});
     }
 
@@ -58,16 +59,19 @@ class PlayGame extends Phaser.Scene {
         this.dude.body.gravity.y = gameOptions.dudeGravity;
         this.physics.add.collider(this.dude, this.groundGroup);
 
-        this.starsGroup = this.physics.add.group({});
+        this.starsGroup = this.physics.add.group();
         this.physics.add.collider(this.starsGroup, this.groundGroup);
-
         this.physics.add.overlap(this.dude, this.starsGroup, this.collectStar, null, this);
+
+        this.bombsGroup = this.physics.add.group();
+        this.physics.add.collider(this.dude, this.bombsGroup, this.hitBomb, null, this);
 
         this.add.image(16, 16, "star");
         this.scoreText = this.add.text(32, 3, "0", {fontSize: "30px", fill: "#ffffff"});
 
         this.cursors = this.input.keyboard.createCursorKeys();
 
+        //Create animations
         this.anims.create({
             key: "left",
             frames: this.anims.generateFrameNumbers("dude", {start: 0, end: 3}),
@@ -96,6 +100,7 @@ class PlayGame extends Phaser.Scene {
         });
     }
 
+    //Add new game objects as the game goes on
     addGround() {
         this.groundGroup.create(Phaser.Math.Between(0, game.config.width), 0, "ground").setScale(0.5);
         this.groundGroup.setVelocityY(gameOptions.dudeSpeed / 6);
@@ -104,15 +109,27 @@ class PlayGame extends Phaser.Scene {
             this.starsGroup.create(Phaser.Math.Between(0, game.config.width), 0, "star");
             this.starsGroup.setVelocityY(gameOptions.dudeSpeed);
         }
+
+        if(Phaser.Math.Between(0, 1)) {
+            this.bombsGroup.create(Phaser.Math.Between(0, game.config.width), 0, "bomb");
+            this.bombsGroup.setVelocityY(gameOptions.dudeSpeed / 2);
+        }
     }
 
+    //Get points when dude collects stars
     collectStar(dude, star) {
         star.disableBody(true, true);
         this.score += 1;
         this.scoreText.setText(this.score);
     }
 
+    //Game starts over when dude is hit by bomb
+    hitBomb(dude, bomb) {
+        this.scene.start("PlayGame");
+    }
+
     update() {
+        //Move dude around
         if(this.cursors.left.isDown) {
             this.dude.body.velocity.x = -gameOptions.dudeSpeed;
             this.dude.anims.play("left", true);
@@ -124,11 +141,13 @@ class PlayGame extends Phaser.Scene {
             this.dude.anims.play("turn", true);
         }
 
+        //Jump with dude
         if(this.cursors.up.isDown && this.dude.body.touching.down) {
             this.dude.body.velocity.y = -gameOptions.dudeGravity / 1.6;
         }
 
-        if(this.dude.y > game.config.height || this.dude.y < 0) {
+        //Game starts over when dude falls off
+        if(this.dude.y > game.config.height) {
             this.scene.start("PlayGame");
         }
     }
