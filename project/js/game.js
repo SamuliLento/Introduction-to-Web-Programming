@@ -53,7 +53,9 @@ class MainMenu extends Phaser.Scene {
         this.load.spritesheet("Saw On", "assets/Traps/Saw/On (38x38).png", {frameWidth: 38, frameHeight: 38});
 
         this.load.audio("jump", "assets/sfx/Retro Jump Classic 08.wav");
+        this.load.audio("jumpTrampoline", "assets/sfx/Retro Jump Simple B 05.wav");
         this.load.audio("collect fruit", "assets/sfx/Retro PickUp Coin 07.wav");
+        this.load.audio("sawHit", "assets/sfx/Retro Impact Metal 05.wav");
     }
 
     create() {
@@ -73,8 +75,9 @@ class MainMenu extends Phaser.Scene {
 
         //Create Menu texts
         this.add.text(game.config.width / 2, game.config.height / 2, "Infinite Jumper", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 64, "Select Level", {fontSize: "30px", fill: "#ffffff"}).setOrigin(1);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 128, "Level ONE", {fontSize: "30px", fill: "#ffffff"}).setOrigin(1);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 64, "Select Level by", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 128, "pressing the number key", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 192, "Level 1", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
 
         //Create Menu inputs
         this.input.keyboard.once("keydown-ONE", () => {
@@ -172,11 +175,13 @@ class PlayGame extends Phaser.Scene {
             y += 64;
         }
 
+        //Create terrain group
         this.terrainGroup = this.physics.add.group({
             immovable: true,
             allowGravity: false
         });
 
+        //Create initial platforms
         for (let i = 0; i < 30; i++) {
             const x = Phaser.Math.Between(0, game.config.width);
             const y = 30 * i;
@@ -189,6 +194,7 @@ class PlayGame extends Phaser.Scene {
             this.terrainGroup.create(x + 80, y, "terrain", 195);
         }
 
+        //Create player character
         this.player = this.physics.add.sprite(game.config.width / 2, game.config.height / 2, "Mask Dude Idle");
         this.physics.add.collider(this.player, this.terrainGroup);
 
@@ -196,20 +202,24 @@ class PlayGame extends Phaser.Scene {
         this.player.body.checkCollision.left = false;
         this.player.body.checkCollision.right = false;
 
+        //Create fruit group
         this.fruitGroup = this.physics.add.group();
         this.physics.add.collider(this.fruitGroup, this.terrainGroup);
         this.physics.add.overlap(this.player, this.fruitGroup, this.collectFruit, null, this);
 
+        //Create trampoline group
         this.trampolineGroup = this.physics.add.group();
         this.physics.add.collider(this.trampolineGroup, this.terrainGroup);
         this.physics.add.overlap(this.player, this.trampolineGroup, this.jumpTrampoline, null, this);
 
+        //Create saw group
         this.sawGroup = this.physics.add.group({
             immovable: true,
             allowGravity: false
         });
         this.physics.add.overlap(this.player, this.sawGroup, this.playerHit, null, this);
 
+        //Create text for score
         this.scoreText = this.add.text(16, 3, "Score: 0", {fontSize: "30px", fill: "#ffffff"});
 
         this.triggerTimer = this.time.addEvent({
@@ -236,7 +246,7 @@ class PlayGame extends Phaser.Scene {
         this.terrainGroup.setVelocityY(gameOptions.playerSpeed / 6);
 
         //Spawn trampolines on platforms
-        if (Phaser.Math.Between(0, 5) == 1) {
+        if (Phaser.Math.Between(0, 4) == 1) {
             this.trampolineGroup.create(x + 40, -20, "Trampoline");
         }
 
@@ -276,6 +286,7 @@ class PlayGame extends Phaser.Scene {
         if(this.player.body.touching.down) {
             this.player.body.velocity.y = -gameOptions.jumpPower * 1.5;
             trampoline.anims.play("trampolineJump", true);
+            this.sound.play("jumpTrampoline");
         }
     }
 
@@ -283,9 +294,11 @@ class PlayGame extends Phaser.Scene {
     playerHit(player, saw) {
         player.body.checkCollision.down = false;
         player.anims.play("hit", true);
+        this.sound.play("sawHit");
     }
 
     update() {
+        //Movement is disabled when player gets hit
         if(this.player.body.checkCollision.down) {
             //Move with player
             if(this.cursors.left.isDown) {
@@ -355,10 +368,15 @@ class GameOver extends Phaser.Scene {
         //Create Game Over texts
         this.add.text(game.config.width / 2, game.config.height / 2, "Game Over!", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
         this.add.text(game.config.width / 2, game.config.height / 2 + 48, "Press SPACE to play again", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 96, "or ESC to return to menu", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
 
         //Create Game Over inputs
         this.input.keyboard.once("keydown-SPACE", () => {
             this.scene.start("PlayGame");
+        });
+
+        this.input.keyboard.once("keydown-ESC", () => {
+            this.scene.start("MainMenu");
         });
     }
 }
