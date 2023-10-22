@@ -75,12 +75,10 @@ class MainMenu extends Phaser.Scene {
 
         //Create Menu texts
         this.add.text(game.config.width / 2, game.config.height / 2, "Infinite Jumper", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 64, "Select Level by", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 128, "pressing the number key", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 192, "Level 1", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 64, "Press SPACE to play", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
 
         //Create Menu inputs
-        this.input.keyboard.once("keydown-ONE", () => {
+        this.input.keyboard.once("keydown-SPACE", () => {
             this.scene.start("PlayGame");
         })
 
@@ -222,6 +220,7 @@ class PlayGame extends Phaser.Scene {
         //Create text for score
         this.scoreText = this.add.text(16, 3, "Score: 0", {fontSize: "30px", fill: "#ffffff"});
 
+        //Call addTerrain every 1000ms
         this.triggerTimer = this.time.addEvent({
             callback: this.addTerrain,
             callbackScope: this,
@@ -230,7 +229,7 @@ class PlayGame extends Phaser.Scene {
         });
     }
 
-    //Spawn new game objects as the game goes on
+    //Spawn new game objects
     addTerrain() {
 
         const x = Phaser.Math.Between(0, game.config.width);
@@ -283,8 +282,8 @@ class PlayGame extends Phaser.Scene {
 
     //Jump high when player hits trampoline
     jumpTrampoline(player, trampoline) {
-        if(this.player.body.touching.down) {
-            this.player.body.velocity.y = -gameOptions.jumpPower * 1.5;
+        if(player.body.touching.down) {
+            player.body.velocity.y = -gameOptions.jumpPower * 1.5;
             trampoline.anims.play("trampolineJump", true);
             this.sound.play("jumpTrampoline");
         }
@@ -367,8 +366,9 @@ class GameOver extends Phaser.Scene {
         
         //Create Game Over texts
         this.add.text(game.config.width / 2, game.config.height / 2, "Game Over!", {fontSize: "48px", fill: "#ffffff"}).setOrigin(0.5);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 48, "Press SPACE to play again", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
-        this.add.text(game.config.width / 2, game.config.height / 2 + 96, "or ESC to return to menu", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 48, "Your score: " + this.scene.get("PlayGame").score , {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 96, "Press SPACE to play again", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
+        this.add.text(game.config.width / 2, game.config.height / 2 + 144, "or ESC to return to menu", {fontSize: "30px", fill: "#ffffff"}).setOrigin(0.5);
 
         //Create Game Over inputs
         this.input.keyboard.once("keydown-SPACE", () => {
